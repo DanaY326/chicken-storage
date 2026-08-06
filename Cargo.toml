@@ -1,0 +1,8 @@
+[package]
+name = "chicken"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+chicken_esolang = "0.1.2"
+io = "0.0.2"
