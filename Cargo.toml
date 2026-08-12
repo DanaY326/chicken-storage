@@ -1,8 +1,8 @@
 [package]
-name = "chicken"
+name = "chicken-kv"
 version = "0.1.0"
 edition = "2024"
+description = "A Redis-compatible key-value server, partly written in the esolang Chicken"
 
 [dependencies]
 chicken_esolang = "0.1.2"
-io = "0.0.2"
