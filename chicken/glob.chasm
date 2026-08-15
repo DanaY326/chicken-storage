@@ -1,0 +1,136 @@
+; glob.chasm - Redis KEYS-style pattern matching, written for the Chicken VM.
+;
+; Input:  "<pattern>\x01<key>\x01"   (the \x01 bytes mark where each part ends)
+; Output: 1 if the key matches the pattern, 0 otherwise.
+;
+; Supports '*' (any run of characters, including none) and '?' (exactly one
+; character). Everything else matches itself.
+;
+; The algorithm is the classic single-backtrack wildcard matcher:
+;
+;   p = s = 0; star = -1
+;   while key[s] is not the end:
+;       if pat[p] == '?' or pat[p] == key[s]: p++, s++
+;       elif pat[p] == '*':                    star = p, mark = s, p++
+;       elif star != -1:                       p = star + 1, mark++, s = mark
+;       else:                                  return 0
+;   skip any trailing '*' in the pattern
+;   return pat[p] is the end
+;
+; Chicken has no "less than", so the ends of the pattern and the key are found
+; by comparing characters against the \x01 separator instead of a length.
+
+.vars k p s star mark c
+
+    ; k = index of the first character of the key (just past the first \x01)
+    push 0
+    set k
+find_sep:
+    get k
+    loadin
+    pushchar 1
+    eq
+    jnz found_sep
+    inc k
+    jmp find_sep
+found_sep:
+    inc k
+
+    push 0
+    set p
+    push 0
+    set s
+    push -1
+    set star
+    push 0
+    set mark
+
+loop:
+    ; reached the end of the key? then only trailing '*'s may remain
+    get k
+    get s
+    add
+    loadin
+    pushchar 1
+    eq
+    jnz tail
+
+    ; c = pat[p]
+    get p
+    loadin
+    set c
+
+    ; pattern used up but key isn't: try to backtrack
+    get c
+    pushchar 1
+    eq
+    jnz backtrack
+
+    get c
+    pushchar '*'
+    eq
+    jnz saw_star
+
+    get c
+    pushchar '?'
+    eq
+    jnz advance
+
+    ; literal character: must equal key[s]
+    get c
+    get k
+    get s
+    add
+    loadin
+    eq
+    jnz advance
+    jmp backtrack
+
+advance:
+    inc p
+    inc s
+    jmp loop
+
+saw_star:
+    get p
+    set star
+    get s
+    set mark
+    inc p
+    jmp loop
+
+backtrack:
+    ; no '*' seen yet -> no match
+    get star
+    push -1
+    eq
+    jnz fail
+    ; let the last '*' swallow one more character and retry from there
+    get star
+    push 1
+    add
+    set p
+    inc mark
+    get mark
+    set s
+    jmp loop
+
+tail:
+    get p
+    loadin
+    pushchar '*'
+    eq
+    jnz tail_star
+    ; match only if the whole pattern was used up
+    get p
+    loadin
+    pushchar 1
+    eq
+    exit
+tail_star:
+    inc p
+    jmp tail
+
+fail:
+    push 0
+    exit

@@ -1,0 +1,103 @@
+; add.chasm - adds two signed decimal integers, written for the Chicken VM.
+; Used by INCR, DECR, INCRBY and DECRBY.
+;
+; Input:  "<a>\x01<b>\x01"   e.g. "41\x01-3\x01"
+; Output: a + b as a number, or the string "chicken" if either operand
+;         contains something that isn't a digit.
+;
+; Chicken can't turn a character into its character code, so each digit is
+; identified by building the characters '0'..'9' and comparing until one
+; matches. Negative numbers are accumulated downwards (acc = acc*10 - d) so
+; that -9223372036854775808 parses without overflowing.
+;
+; The Rust side checks for i64 overflow before calling this, the same way
+; Redis returns an error instead of wrapping around.
+
+.vars i left acc neg d c res
+
+    push 0
+    set i
+    push 0
+    set res
+    push 2
+    set left             ; operands still to read
+
+operand:
+    push 0
+    set acc
+    push 0
+    set neg
+    get i
+    loadin
+    pushchar '-'
+    eq
+    jnz minus
+    jmp digits
+minus:
+    push 1
+    set neg
+    inc i
+
+digits:
+    get i
+    loadin
+    set c
+    get c
+    pushchar 1
+    eq
+    jnz operand_done
+
+    ; find d in 0..9 such that char(48 + d) == c
+    push 0
+    set d
+digit_search:
+    get d
+    push 10
+    eq
+    jnz bad_input
+    get d
+    push '0'
+    add
+    char
+    get c
+    eq
+    jnz got_digit
+    inc d
+    jmp digit_search
+
+got_digit:
+    get acc
+    push 10
+    mul
+    set acc
+    get neg
+    jnz neg_digit
+    get acc
+    get d
+    add
+    set acc
+    jmp next_char
+neg_digit:
+    get acc
+    get d
+    sub
+    set acc
+next_char:
+    inc i
+    jmp digits
+
+operand_done:
+    get res
+    get acc
+    add
+    set res
+    inc i                ; skip the \x01
+    dec left
+    get left
+    jnz operand
+    get res
+    exit
+
+bad_input:
+    chicken
+    exit
