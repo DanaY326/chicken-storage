@@ -1,3 +1,4 @@
+mod chicken;
 use chicken_esolang::Chicken;
 use std::collections::HashMap;
 use std::env;
