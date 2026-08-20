@@ -1,5 +1,6 @@
 mod chicken;
 mod resp;
+mod store;
 use chicken_esolang::Chicken;
 use std::collections::HashMap;
 use std::env;
