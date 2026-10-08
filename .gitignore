@@ -1,1 +1,5 @@
 /target
+
+# snapshots written by the server
+*.ckv
+*.tmp
