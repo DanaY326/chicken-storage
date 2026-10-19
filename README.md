@@ -55,12 +55,23 @@ a Rust reference implementation on every pattern/key pair up to length 4
 
 ## Running it
 
+Start the server on the default address, 127.0.0.1:6379:
+
 ```sh
-cargo run --release                       # listens on 127.0.0.1:6379
+cargo run --release
+```
+
+Or pick the port, snapshot file and save interval (see `--help`):
+
+```sh
 cargo run --release -- --port 7000 --snapshot /tmp/dump.ckv --save-interval 10
 ```
 
-Then, from another terminal:
+Then, from another terminal, talk to it with `redis-cli`. It comes with Redis;
+on macOS, install it with `brew install redis`. Don't start the Redis server
+that Homebrew also installs (`brew services start redis`), because it would
+take port 6379. If you started chicken-kv on another port, add `-p <port>`,
+e.g. `redis-cli -p 7000 PING`.
 
 ```console
 $ redis-cli SET user:1 ada
@@ -81,9 +92,16 @@ cargo run --release -- run chicken/demo.ch 72
 
 ## Development
 
+Run the unit tests and an end-to-end TCP test:
+
 ```sh
-cargo test                                 # unit tests + an end-to-end TCP test
-python3 tools/chasm.py chicken/glob.chasm  # reassemble after editing a .chasm
+cargo test
+```
+
+After editing a `.chasm` file, reassemble it:
+
+```sh
+python3 tools/chasm.py chicken/glob.chasm
 ```
 
 | Path | |
