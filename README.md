@@ -76,8 +76,12 @@ e.g. `redis-cli -p 7000 PING`.
 ```console
 $ redis-cli SET user:1 ada
 OK
+$ redis-cli GET user:1
+"ada"
 $ redis-cli INCRBY visits 41
 (integer) 41
+$ redis-cli GET visits
+"41"
 $ redis-cli KEYS 'user:*'
 1) "user:1"
 ```
