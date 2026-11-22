@@ -7,6 +7,8 @@ esoteric language whose only keyword is `chicken`.
 It speaks the real Redis protocol (RESP2 and RESP3), so standard clients such
 as `redis-cli`, `redis-benchmark` and `redis-py` work with it unchanged.
 
+Video: [Simple Redis clone using Rust and the Chicken esolang](https://www.youtube.com/watch?v=UxkzVuvoTJ4)
+
 ## What's written in Chicken
 
 | Feature | Chicken source | What it does |
